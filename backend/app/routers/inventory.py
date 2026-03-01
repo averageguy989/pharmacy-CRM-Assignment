@@ -8,8 +8,22 @@ fake_medicines = []
 medicine_id = 1
 
 
-fake_transactions = []
-transaction_id = 1
+fake_transactions = [
+    {
+        "id": 1,
+       "customer": "John Doe",
+       "amount": 150,
+       "status": "Completed",
+       "date": datetime.utcnow(),
+       "items": 2,
+       "payment": "Cash",
+        "timestamp": datetime.utcnow(),
+        "total_price": 150,
+        "quantity": 2,
+        "medicine_id": 1
+    }
+]
+transaction_id = 2
 
 def calculate_status(quantity, expiry_date):
     if expiry_date < datetime.utcnow():
@@ -21,6 +35,30 @@ def calculate_status(quantity, expiry_date):
     else:
         return "Active"
 
+@router.get("/summary")
+def dashboard_summary():
+    today = datetime.utcnow().date()
+    total_sales = sum(
+        transaction["total_price"] for transaction in fake_transactions
+        if transaction["timestamp"].date() == today
+    )
+    total_purchases = sum(
+        medicine["cost_price"] * medicine["quantity"] for medicine in fake_medicines
+    )
+    low_stock_count = sum(1 for medicine in fake_medicines if medicine["quantity"] < 10 and medicine["status"] != "Expired")
+    items_sold = sum(
+        transaction["quantity"] for transaction in fake_transactions
+        if transaction["timestamp"].date() == today
+    )
+
+    return {
+        "success": True,
+        "total_sales": total_sales,
+        "total_purchases": total_purchases,
+        "low_stock_count": low_stock_count,
+        "items_sold": items_sold,
+        "date": today
+    }
 
 @router.get("/sales_summary")
 def today_sales_summary():
@@ -58,7 +96,7 @@ def low_stock_medicines():
     ]
 
     return {
-        success: True,
+        "success": True,
         "data" : low_stock_items
     }
 
@@ -176,4 +214,15 @@ def sell_medicine(medicine_id: int, quantity: int):
             }
 
     raise HTTPException(status_code=404, detail="Medicine not found")
+
+@router.get("/recent-sales")
+def recent_sales():
+    sorted_transactions = sorted(fake_transactions, key=lambda x: x["timestamp"], reverse=True)
+    recent_sales = sorted_transactions[:5]
+
+
+    return {
+        "success": True,
+        "data": recent_sales
+    }
 

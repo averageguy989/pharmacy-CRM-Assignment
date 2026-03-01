@@ -23,4 +23,11 @@ class MedicineUpdate(BaseModel):
     cost_price: Optional[float] = None
     mrp: Optional[float] = None
     supplier: Optional[str] = None
-
+    
+class SellTransactionCreate(BaseModel):
+    name: str 
+    quantity: int
+    total_price: float
+    payment_method: str
+    date: Optional[datetime] = None
+    status: Optional[str] = "completed"
